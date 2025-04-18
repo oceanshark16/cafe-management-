@@ -1,7 +1,7 @@
 # No external libraries required for basic Tkinter GUI
-# Only include external packages here if you use them.
 
-# Uncomment if you want to use these later:
-# pytest       # for testing
-# flake8       # for linting
-# pyinstaller  # to package into a .exe for Windows
+# Include only if you're using them:
+
+pytest       # for testing automation
+flake8       # for linting Python code
+pyinstaller  # to convert Python script into .exe for Windows
