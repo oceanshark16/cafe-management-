@@ -12,8 +12,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/oceanshark16/cafe-management-.git'
+                git branch: 'main', url: 'https://github.com/oceanshark16/cafe-management-.git'
             }
         }
 
@@ -28,10 +27,15 @@ pipeline {
                 bat "${env.PYTHON_PATH} -m pip install --upgrade pip"
                 script {
                     def reqFile = 'requirements.txt'
-                    if (fileExists(reqFile) && readFile(reqFile).trim()) {
-                        bat "${env.PYTHON_PATH} -m pip install -r ${reqFile}"
+                    if (fileExists(reqFile)) {
+                        def reqContent = readFile(reqFile).trim()
+                        if (reqContent) {
+                            bat "${env.PYTHON_PATH} -m pip install -r ${reqFile}"
+                        } else {
+                            echo "requirements.txt is empty. No packages to install."
+                        }
                     } else {
-                        echo "No external packages to install from requirements.txt"
+                        echo "No requirements.txt file found."
                     }
                 }
             }
