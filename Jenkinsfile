@@ -26,8 +26,14 @@ pipeline {
         stage('Install Requirements') {
             steps {
                 bat "${env.PYTHON_PATH} -m pip install --upgrade pip"
-                // Only run if you have a requirements.txt
-                bat "${env.PYTHON_PATH} -m pip install -r requirements.txt"
+                script {
+                    def reqFile = 'requirements.txt'
+                    if (fileExists(reqFile) && readFile(reqFile).trim()) {
+                        bat "${env.PYTHON_PATH} -m pip install -r ${reqFile}"
+                    } else {
+                        echo "No external packages to install from requirements.txt"
+                    }
+                }
             }
         }
 
@@ -39,8 +45,8 @@ pipeline {
 
         stage('Run GUI App (Optional)') {
             steps {
-                echo 'You can run the app only if Jenkins is on a system with GUI support'
-                // Uncomment to run GUI (only works on local Jenkins with desktop)
+                echo 'This app uses Tkinter. GUI can run only if Jenkins has desktop support.'
+                // Uncomment below line if Jenkins is running on a GUI-supported system
                 // bat "${env.PYTHON_PATH} main.py"
             }
         }
@@ -54,7 +60,7 @@ pipeline {
             echo 'Build failed!'
         }
         success {
-            echo 'Build succeeded'
+            echo 'Build succeeded.'
         }
     }
 }
