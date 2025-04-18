@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    environment {
+        PYTHON_VERSION = '3.11'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Set up Python') {
+            steps {
+                sh 'python3 --version'
+                sh 'pip install --upgrade pip'
+                sh 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Syntax Check') {
+            steps {
+                sh 'python3 -m py_compile main.py'
+            }
+        }
+
+        stage('Run Application') {
+            steps {
+                echo 'Skipping GUI execution in CI (Tkinter not supported in headless)'
+                // Optional: Use xvfb-run if you want to actually run GUI tests.
+                // sh 'xvfb-run -a python3 main.py'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished.'
+        }
+        failure {
+            echo 'Build failed.'
+        }
+        success {
+            echo 'Build succeeded.'
+        }
+    }
+}
