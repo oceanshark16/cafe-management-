@@ -2,35 +2,46 @@ pipeline {
     agent any
 
     environment {
-        PYTHON_VERSION = '3.11'
+        PYTHON_PATH = 'C:\\Users\\hp\\AppData\\Local\\Programs\\Python\\Python313\\python.exe'
+    }
+
+    options {
+        skipDefaultCheckout(true)
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Clone Repository') {
             steps {
-                checkout scm
+                git branch: 'main',
+                    url: 'https://github.com/oceanshark16/cafe-management-.git'
             }
         }
 
-        stage('Set up Python') {
+        stage('Check Python Version') {
             steps {
-                sh 'python3 --version'
-                sh 'pip install --upgrade pip'
-                sh 'pip install -r requirements.txt'
+                bat "${env.PYTHON_PATH} --version"
+            }
+        }
+
+        stage('Install Requirements') {
+            steps {
+                bat "${env.PYTHON_PATH} -m pip install --upgrade pip"
+                // Only run if you have a requirements.txt
+                bat "${env.PYTHON_PATH} -m pip install -r requirements.txt"
             }
         }
 
         stage('Syntax Check') {
             steps {
-                sh 'python3 -m py_compile main.py'
+                bat "${env.PYTHON_PATH} -m py_compile main.py"
             }
         }
 
-        stage('Run Application') {
+        stage('Run GUI App (Optional)') {
             steps {
-                echo 'Skipping GUI execution in CI (Tkinter not supported in headless)'
-                // Optional: Use xvfb-run if you want to actually run GUI tests.
-                // sh 'xvfb-run -a python3 main.py'
+                echo 'You can run the app only if Jenkins is on a system with GUI support'
+                // Uncomment to run GUI (only works on local Jenkins with desktop)
+                // bat "${env.PYTHON_PATH} main.py"
             }
         }
     }
@@ -40,10 +51,10 @@ pipeline {
             echo 'Pipeline finished.'
         }
         failure {
-            echo 'Build failed.'
+            echo 'Build failed!'
         }
         success {
-            echo 'Build succeeded.'
+            echo 'Build succeeded!'
         }
     }
 }
