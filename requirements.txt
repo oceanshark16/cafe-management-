@@ -1,14 +1,7 @@
-# GUI library (built-in, but mentioned for completeness)
-tk
+# No external libraries required for basic Tkinter GUI
+# Only include external packages here if you use them.
 
-# Optional: Used in your script
-random
-datetime
-time
-
-# If using messagebox (also in tkinter)
-# No external package required for messagebox
-
-# If you plan to add GUI testing or linting, consider:
-# pytest
-# flake8
+# Uncomment if you want to use these later:
+# pytest       # for testing
+# flake8       # for linting
+# pyinstaller  # to package into a .exe for Windows
