@@ -5,3 +5,4 @@
 pytest       # for testing automation
 flake8       # for linting Python code
 pyinstaller  # to convert Python script into .exe for Windows
+streamlit
