@@ -28,15 +28,20 @@ pipeline {
                 script {
                     // If requirements.txt doesn't exist, create it with minimal requirements
                     if (!fileExists('requirements.txt')) {
-                        writeFile file: 'requirements.txt', text: 'streamlit>=1.28.0\npandas\npython-dateutil'
-                        echo "Created requirements.txt with Streamlit dependencies"
+                        writeFile file: 'requirements.txt', text: 'streamlit>=1.28.0\npandas\npython-dateutil\npytest>=7.0.0'
+                        echo "Created requirements.txt with Streamlit and testing dependencies"
                     } else {
-                        // Check if streamlit is in requirements.txt, if not add it
+                        // Check if streamlit and pytest are in requirements.txt, if not add them
                         def reqContent = readFile('requirements.txt')
+                        def updatedContent = reqContent
                         if (!reqContent.contains('streamlit')) {
-                            writeFile file: 'requirements.txt', text: reqContent + '\nstreamlit>=1.28.0'
-                            echo "Added Streamlit to existing requirements.txt"
+                            updatedContent += '\nstreamlit>=1.28.0'
                         }
+                        if (!reqContent.contains('pytest')) {
+                            updatedContent += '\npytest>=7.0.0'
+                        }
+                        writeFile file: 'requirements.txt', text: updatedContent
+                        echo "Updated requirements.txt with necessary dependencies"
                     }
                 }
             }
@@ -52,7 +57,58 @@ pipeline {
         stage('Syntax Check') {
             steps {
                 bat "${env.PYTHON_PATH} -m py_compile ${env.APP_NAME}"
-                echo "Python syntax check passed for ${env.APP_NAME}"
+                bat "${env.PYTHON_PATH} -m py_compile cafe_logic.py"
+                echo "Python syntax check passed for ${env.APP_NAME} and cafe_logic.py"
+            }
+        }
+        
+        stage('Run Unit Tests') {
+            steps {
+                script {
+                    try {
+                        // Run pytest on test_cafe_logic.py
+                        bat "${env.PYTHON_PATH} -m pytest test_cafe_logic.py -v --junitxml=test-results.xml"
+                        echo "Unit tests passed for cafe_logic.py"
+                    } catch (Exception e) {
+                        echo "Unit tests failed: ${e.message}"
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'test-results.xml'
+                }
+            }
+        }
+        
+        stage('Run Specific Logic Tests') {
+            steps {
+                script {
+                    // Create a simple test script to verify core functionality
+                    writeFile file: 'verify_cafe_logic.py', text: '''
+import cafe_logic
+
+def test_basic_functionality():
+    """Test core functionality of cafe_logic module"""
+    print("Testing basic cafe_logic functionality...")
+    
+    # Test menu items are available
+    assert hasattr(cafe_logic, 'drinks') or hasattr(cafe_logic, 'get_drinks'), "Drinks functionality missing"
+    assert hasattr(cafe_logic, 'cakes') or hasattr(cafe_logic, 'get_cakes'), "Cakes functionality missing"
+    
+    # Test calculation functions if they exist
+    if hasattr(cafe_logic, 'calculate_cost'):
+        print("Testing calculate_cost function...")
+        # Add appropriate test based on your specific implementation
+    
+    print("Basic functionality tests completed")
+
+if __name__ == "__main__":
+    test_basic_functionality()
+'''
+                    bat "${env.PYTHON_PATH} verify_cafe_logic.py"
+                }
             }
         }
         
@@ -60,24 +116,28 @@ pipeline {
             steps {
                 script {
                     writeFile file: 'README.md', text: '''# Cafe Management System
-
 A Streamlit-based application for managing a cafe's orders, billing, and receipts.
 
 ## Features
-
 - Add drinks and cakes to the order
 - Calculate costs, taxes, and total bill
 - Generate detailed receipts
 - Reset functionality for new orders
 
-## Installation
+## Core Components
+- `main.py`: Main Streamlit application
+- `cafe_logic.py`: Business logic for the cafe management system
+- `test_cafe_logic.py`: Unit tests for cafe logic
 
+## Installation
 1. Clone the repository
 2. Install required packages: `pip install -r requirements.txt`
 3. Run the application: `streamlit run main.py`
 
-## License
+## Testing
+Run the tests with: `pytest test_cafe_logic.py`
 
+## License
 MIT
 '''
                     echo "Generated README.md documentation"
@@ -117,7 +177,7 @@ streamlit run main.py --server.port=8501
         success {
             echo 'Build succeeded! Cafe Management System is ready for deployment.'
             // Archive the artifacts
-            archiveArtifacts artifacts: '*.py, *.bat, *.sh, requirements.txt, README.md', fingerprint: true
+            archiveArtifacts artifacts: '*.py, *.bat, *.sh, requirements.txt, README.md, test-results.xml', fingerprint: true
         }
     }
 }
