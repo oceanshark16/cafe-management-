@@ -3,7 +3,7 @@ import random
 import datetime
 
 # Page configuration
-st.set_page_config(page_title="Cafe Management System", layout="wide")
+st.set_page_config(page_title="Cafe VIT_SOHAM", layout="wide")
 
 # Title
 st.title("Cafe Management Systemssss")
