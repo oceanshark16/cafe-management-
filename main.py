@@ -6,7 +6,7 @@ import datetime
 st.set_page_config(page_title="Cafe Management System", layout="wide")
 
 # Title
-st.title("Cafe Management System")
+st.title("Cafe Management Systemssss")
 
 # Initialize menu and prices
 MENU_PRICES = {
